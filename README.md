@@ -221,6 +221,10 @@ Releases are fully automated — `feat:` commits trigger a MINOR release, `fix:`
 - React Native library-specific checks
 - Expo-specific configuration validation
 
+## See Also
+
+- **[Apple App Store Toolkit](https://github.com/crgeee/apple-appstore-toolkit)** — Sister plugin for Apple App Store readiness review. Uses the same multi-agent architecture to review React Native and Swift/Xcode iOS apps.
+
 ## License
 
 [MIT](LICENSE)
