@@ -14,7 +14,6 @@
 - [ ] `react-native-expo-reviewer`
 - [ ] `review-app` command
 - [ ] `playstore-requirements` skill / references
-- [ ] MCP server
 - [ ] CI / repo config
 - [ ] Documentation only
 

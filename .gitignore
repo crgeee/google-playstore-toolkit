@@ -1,5 +1,2 @@
-node_modules/
-dist/
 .claude/*.local.md
 .env
-*.tgz
