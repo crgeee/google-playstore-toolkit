@@ -82,7 +82,7 @@ After ALL agents complete, compile a unified report. Do NOT just concatenate age
 
 **Project Type:** [React Native (Expo) / React Native (bare) / Native Android (Kotlin/Java)]
 **Agents Run:** [count] of [total applicable]
-**Overall Assessment:** [Ready / Needs Work / Not Ready]
+**Overall Assessment:** [MUST use these exact rules: "Not Ready" if Critical >= 1, "Needs Work" if Critical == 0 AND Important >= 3, "Ready" if Critical == 0 AND Important <= 2]
 
 ---
 
@@ -116,11 +116,15 @@ Present as a table for scannability:
 5. Re-run: `/google-playstore-toolkit:review-app`
 ```
 
-### Assessment Criteria
+### Assessment Criteria — STRICTLY ENFORCE THESE
 
-- **Ready**: 0 Critical, <= 2 Important issues
-- **Needs Work**: 0 Critical, 3+ Important issues
-- **Not Ready**: 1+ Critical issues
+Count Critical and Important issues across ALL agents, then apply:
+
+- **Not Ready**: ANY Critical issues (>= 1 Critical) — check this FIRST
+- **Needs Work**: 0 Critical AND 3+ Important issues
+- **Ready**: 0 Critical AND <= 2 Important issues
+
+**Important**: If there is even 1 Critical issue, the assessment MUST be "Not Ready", regardless of how many Important issues there are.
 
 ## Usage Examples:
 
