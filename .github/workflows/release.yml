@@ -1,0 +1,165 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Semantic Release
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: Get latest tag
+        id: latest_tag
+        run: |
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Latest tag: $tag"
+
+      - name: Determine version bump from commits
+        id: bump
+        env:
+          LATEST_TAG: ${{ steps.latest_tag.outputs.tag }}
+        run: |
+          commits=$(git log "$LATEST_TAG"..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
+
+          bump="none"
+          while IFS= read -r msg; do
+            if echo "$msg" | grep -qiE '^[a-z]+(\(.+\))?!:|BREAKING CHANGE'; then
+              bump="major"
+              break
+            fi
+            if echo "$msg" | grep -qiE '^feat(\(.+\))?:'; then
+              if [ "$bump" != "major" ]; then
+                bump="minor"
+              fi
+            fi
+            if echo "$msg" | grep -qiE '^fix(\(.+\))?:'; then
+              if [ "$bump" = "none" ]; then
+                bump="patch"
+              fi
+            fi
+          done <<< "$commits"
+
+          echo "bump=$bump" >> "$GITHUB_OUTPUT"
+          echo "Determined bump: $bump"
+
+      - name: Calculate new version
+        id: version
+        if: steps.bump.outputs.bump != 'none'
+        env:
+          LATEST_TAG: ${{ steps.latest_tag.outputs.tag }}
+          BUMP: ${{ steps.bump.outputs.bump }}
+        run: |
+          current="${LATEST_TAG#v}"
+          IFS='.' read -r major minor patch <<< "$current"
+
+          case "$BUMP" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+
+          new_version="${major}.${minor}.${patch}"
+          echo "version=$new_version" >> "$GITHUB_OUTPUT"
+          echo "New version: $new_version (was $current)"
+
+      - name: Generate release notes
+        id: notes
+        if: steps.bump.outputs.bump != 'none'
+        env:
+          LATEST_TAG: ${{ steps.latest_tag.outputs.tag }}
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          added=""
+          changed=""
+          fixed=""
+
+          while IFS= read -r msg; do
+            clean=$(echo "$msg" | sed -E 's/^[a-z]+(\([^)]*\))?!?:\s*//')
+            clean=$(echo "$clean" | sed -E 's/\s*\(#[0-9]+\)$//')
+
+            if echo "$msg" | grep -qiE '^feat(\(.+\))?:'; then
+              added="${added}\n- ${clean}"
+            elif echo "$msg" | grep -qiE '^fix(\(.+\))?:'; then
+              fixed="${fixed}\n- ${clean}"
+            elif echo "$msg" | grep -qiE '^(docs|ci|chore|refactor|perf|style|test)(\(.+\))?:'; then
+              changed="${changed}\n- ${clean}"
+            fi
+          done <<< "$(git log "$LATEST_TAG"..HEAD --pretty=format:"%s")"
+
+          {
+            if [ -n "$added" ]; then
+              echo "### Added"
+              echo -e "$added"
+              echo ""
+            fi
+            if [ -n "$changed" ]; then
+              echo "### Changed"
+              echo -e "$changed"
+              echo ""
+            fi
+            if [ -n "$fixed" ]; then
+              echo "### Fixed"
+              echo -e "$fixed"
+              echo ""
+            fi
+          } > /tmp/release_notes.md
+
+          cat /tmp/release_notes.md
+
+      - name: Create tag and GitHub release
+        if: steps.bump.outputs.bump != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${NEW_VERSION}"
+          git push origin "v${NEW_VERSION}"
+          gh release create "v${NEW_VERSION}" \
+            --title "v${NEW_VERSION}" \
+            --notes-file /tmp/release_notes.md
+
+      - name: Bump version files and push to main
+        if: steps.bump.outputs.bump != 'none'
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Update plugin.json
+          python3 -c "
+          import json, os
+          v = os.environ['NEW_VERSION']
+          with open('.claude-plugin/plugin.json', 'r') as f:
+              data = json.load(f)
+          data['version'] = v
+          with open('.claude-plugin/plugin.json', 'w') as f:
+              json.dump(data, f, indent=2)
+              f.write('\n')
+          "
+
+          # Update CHANGELOG
+          today=$(date +%Y-%m-%d)
+          head -3 CHANGELOG.md > /tmp/changelog_new.md
+          echo "" >> /tmp/changelog_new.md
+          echo "## [${NEW_VERSION}] - ${today}" >> /tmp/changelog_new.md
+          echo "" >> /tmp/changelog_new.md
+          cat /tmp/release_notes.md >> /tmp/changelog_new.md
+          tail -n +4 CHANGELOG.md >> /tmp/changelog_new.md
+          mv /tmp/changelog_new.md CHANGELOG.md
+
+          # Push directly to main
+          git add .claude-plugin/plugin.json CHANGELOG.md
+          git commit -m "chore(release): v${NEW_VERSION}"
+          git push origin main

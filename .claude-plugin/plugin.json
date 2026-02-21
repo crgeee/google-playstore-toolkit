@@ -1,0 +1,21 @@
+{
+  "name": "google-playstore-toolkit",
+  "version": "0.1.0",
+  "description": "Comprehensive Google Play Store readiness review toolkit that uses specialized agents to ensure Android, React Native, and Expo apps meet Google's Play Store requirements before submission",
+  "author": {
+    "name": "Christopher Gonzalez"
+  },
+  "homepage": "https://github.com/crgeee/google-playstore-toolkit",
+  "repository": "https://github.com/crgeee/google-playstore-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "google",
+    "play-store",
+    "android",
+    "react-native",
+    "expo",
+    "kotlin",
+    "review",
+    "compliance"
+  ]
+}

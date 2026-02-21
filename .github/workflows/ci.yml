@@ -1,0 +1,252 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate-plugin:
+    name: Validate Plugin Structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check plugin manifest exists
+        run: |
+          if [ ! -f .claude-plugin/plugin.json ]; then
+            echo "::error::Missing .claude-plugin/plugin.json"
+            exit 1
+          fi
+
+      - name: Validate plugin.json is valid JSON
+        run: python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
+
+      - name: Check required manifest fields
+        run: |
+          python3 -c "
+          import json, sys
+          manifest = json.load(open('.claude-plugin/plugin.json'))
+          errors = []
+          if 'name' not in manifest:
+              errors.append('Missing required field: name')
+          if 'version' not in manifest:
+              errors.append('Missing required field: version')
+          if errors:
+              for e in errors:
+                  print(f'::error::{e}')
+              sys.exit(1)
+          print(f'Plugin: {manifest[\"name\"]} v{manifest[\"version\"]}')
+          "
+
+  validate-agents:
+    name: Validate Agents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check agent files have frontmatter
+        run: |
+          exit_code=0
+          for file in agents/*.md; do
+            if [ ! -f "$file" ]; then continue; fi
+            if ! head -1 "$file" | grep -q '^---$'; then
+              echo "::error file=$file::Missing YAML frontmatter"
+              exit_code=1
+            fi
+          done
+          exit $exit_code
+
+      - name: Check agent required fields
+        run: |
+          exit_code=0
+          for file in agents/*.md; do
+            if [ ! -f "$file" ]; then continue; fi
+            frontmatter=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
+
+            if ! echo "$frontmatter" | grep -q '^name:'; then
+              echo "::error file=$file::Missing 'name' in frontmatter"
+              exit_code=1
+            fi
+            if ! echo "$frontmatter" | grep -q '^description:'; then
+              echo "::error file=$file::Missing 'description' in frontmatter"
+              exit_code=1
+            fi
+            if ! echo "$frontmatter" | grep -q '^model:'; then
+              echo "::error file=$file::Missing 'model' in frontmatter"
+              exit_code=1
+            fi
+            if ! echo "$frontmatter" | grep -q '^color:'; then
+              echo "::error file=$file::Missing 'color' in frontmatter"
+              exit_code=1
+            fi
+          done
+
+          agent_count=$(ls -1 agents/*.md 2>/dev/null | wc -l | tr -d ' ')
+          echo "Validated $agent_count agent(s)"
+          exit $exit_code
+
+  validate-commands:
+    name: Validate Commands
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check command files have frontmatter
+        run: |
+          exit_code=0
+          for file in commands/*.md; do
+            if [ ! -f "$file" ]; then continue; fi
+            if ! head -1 "$file" | grep -q '^---$'; then
+              echo "::error file=$file::Missing YAML frontmatter"
+              exit_code=1
+            fi
+          done
+          exit $exit_code
+
+      - name: Check command required fields
+        run: |
+          exit_code=0
+          for file in commands/*.md; do
+            if [ ! -f "$file" ]; then continue; fi
+            frontmatter=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
+
+            if ! echo "$frontmatter" | grep -q '^description:'; then
+              echo "::error file=$file::Missing 'description' in frontmatter"
+              exit_code=1
+            fi
+          done
+
+          cmd_count=$(ls -1 commands/*.md 2>/dev/null | wc -l | tr -d ' ')
+          echo "Validated $cmd_count command(s)"
+          exit $exit_code
+
+  validate-skills:
+    name: Validate Skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check SKILL.md exists for each skill
+        run: |
+          exit_code=0
+          for dir in skills/*/; do
+            if [ ! -d "$dir" ]; then continue; fi
+            if [ ! -f "${dir}SKILL.md" ]; then
+              echo "::error::Missing SKILL.md in $dir"
+              exit_code=1
+            fi
+          done
+          exit $exit_code
+
+      - name: Check skill frontmatter
+        run: |
+          exit_code=0
+          for file in skills/*/SKILL.md; do
+            if [ ! -f "$file" ]; then continue; fi
+            if ! head -1 "$file" | grep -q '^---$'; then
+              echo "::error file=$file::Missing YAML frontmatter"
+              exit_code=1
+            fi
+            frontmatter=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
+            if ! echo "$frontmatter" | grep -q '^name:'; then
+              echo "::error file=$file::Missing 'name' in frontmatter"
+              exit_code=1
+            fi
+            if ! echo "$frontmatter" | grep -q '^description:'; then
+              echo "::error file=$file::Missing 'description' in frontmatter"
+              exit_code=1
+            fi
+          done
+
+          skill_count=$(ls -1 skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+          echo "Validated $skill_count skill(s)"
+          exit $exit_code
+
+  validate-references:
+    name: Validate References
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check reference files are non-empty
+        run: |
+          exit_code=0
+          for file in skills/*/references/*.md; do
+            if [ ! -f "$file" ]; then continue; fi
+            if [ ! -s "$file" ]; then
+              echo "::error file=$file::Reference file is empty"
+              exit_code=1
+            fi
+          done
+
+          ref_count=$(ls -1 skills/*/references/*.md 2>/dev/null | wc -l | tr -d ' ')
+          echo "Validated $ref_count reference file(s)"
+          exit $exit_code
+
+  markdown-lint:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for broken internal links
+        run: |
+          for link in $(grep -oP '\[.*?\]\(((?!https?://)[^)]+)\)' README.md | grep -oP '\(([^)]+)\)' | tr -d '()'); do
+            if [ ! -f "$link" ] && [ ! -d "$link" ]; then
+              echo "::warning file=README.md::Broken link: $link"
+            fi
+          done
+
+  commit-lint:
+    name: Lint Commit Messages
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate conventional commits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "Checking commits from $BASE_SHA to $HEAD_SHA"
+          pattern='^(feat|fix|docs|ci|chore|refactor|perf|style|test|build|revert)(\([a-z0-9-]+\))?(!)?: .+'
+          exit_code=0
+          while IFS= read -r msg; do
+            if ! echo "$msg" | grep -qE "$pattern"; then
+              echo "::error::Invalid commit message: '$msg'"
+              echo "  Must match: type(scope)?: description"
+              echo "  Types: feat, fix, docs, ci, chore, refactor, perf, style, test, build, revert"
+              exit_code=1
+            fi
+          done <<< "$(git log "$BASE_SHA".."$HEAD_SHA" --pretty=format:"%s")"
+
+          if [ $exit_code -eq 0 ]; then
+            echo "All commit messages follow conventional commits format"
+          fi
+          exit $exit_code
+
+  version-consistency:
+    name: Check Version Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify versions match across files
+        run: |
+          manifest_version=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          changelog_version=$(grep -oP '## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -1)
+
+          echo "plugin.json: $manifest_version"
+          echo "CHANGELOG:   $changelog_version"
+
+          if [ "$manifest_version" != "$changelog_version" ]; then
+            echo "::error::Version mismatch: plugin.json ($manifest_version) != CHANGELOG ($changelog_version)"
+            exit 1
+          fi
+
+          echo "All versions consistent: $manifest_version"

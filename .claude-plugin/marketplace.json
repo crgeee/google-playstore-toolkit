@@ -1,0 +1,16 @@
+{
+  "name": "google-playstore-toolkit",
+  "description": "Google Play Store readiness review toolkit for Claude Code",
+  "owner": {
+    "name": "Christopher Gonzalez"
+  },
+  "plugins": [
+    {
+      "name": "google-playstore-toolkit",
+      "description": "Reviews Android apps for Play Store readiness using 8 specialized agents. Supports native Android, React Native, and Expo.",
+      "source": "./",
+      "category": "development",
+      "homepage": "https://github.com/crgeee/google-playstore-toolkit"
+    }
+  ]
+}
