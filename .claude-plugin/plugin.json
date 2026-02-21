@@ -1,6 +1,6 @@
 {
   "name": "google-playstore-toolkit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Comprehensive Google Play Store readiness review toolkit that uses specialized agents to ensure Android, React Native, and Expo apps meet Google's Play Store requirements before submission",
   "author": {
     "name": "Christopher Gonzalez"

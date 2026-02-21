@@ -2,6 +2,13 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [0.1.1] - 2026-02-21
+
+### Fixed
+
+- remove unused MCP server and clean up references
+
+
 ## [0.1.0] - 2026-02-21
 
 ### Added
