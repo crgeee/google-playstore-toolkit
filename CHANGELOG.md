@@ -2,6 +2,18 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [0.1.2] - 2026-02-21
+
+### Changed
+
+- add FUNDING.yml and See Also section
+- v0.1.1
+
+### Fixed
+
+- address validation warnings and auto-bump skill versions on release
+
+
 ## [0.1.1] - 2026-02-21
 
 ### Fixed

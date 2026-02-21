@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Plugin: Claude Code](https://img.shields.io/badge/Plugin-Claude%20Code-blueviolet)](https://claude.com/claude-code)
-[![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-green)](CHANGELOG.md)
+[![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-green)](CHANGELOG.md)
 
 A Claude Code plugin that reviews Android apps for Google Play Store readiness using 8 specialized review agents. Supports **native Android (Kotlin/Java)**, **React Native**, and **Expo** projects.
 
