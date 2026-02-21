@@ -20,6 +20,15 @@ description: Use this agent when reviewing an Android app's UI/UX compliance wit
   </commentary>
   </example>
 
+  <example>
+  Context: The review-app command dispatches this agent as part of a full Play Store readiness review.
+  user: "/google-playstore-toolkit:review-app design"
+  assistant: "I'll launch the material-design-reviewer agent to check Material Design compliance, accessibility, adaptive layouts, and edge-to-edge readiness."
+  <commentary>
+  The review-app command dispatches this agent when the user requests a design-focused or full review.
+  </commentary>
+  </example>
+
 model: inherit
 color: magenta
 tools: ["Read", "Glob", "Grep"]

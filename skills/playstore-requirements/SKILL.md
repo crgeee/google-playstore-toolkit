@@ -1,7 +1,7 @@
 ---
 name: playstore-requirements
 description: This skill should be used when the user asks about "Play Store requirements", "Play Store review guidelines", "Play Store rejection reasons", "why was my app rejected from Google Play", "Google Play compliance", "Data Safety Section", "target SDK requirements", "Android app submission checklist", "React Native Play Store", "Expo Play Store submission", or needs guidance on Google Play Store compliance, common rejection reasons, privacy requirements, or submission readiness.
-version: 0.1.0
+version: 0.1.1
 ---
 
 # Google Play Store Requirements
