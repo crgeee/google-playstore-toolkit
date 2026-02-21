@@ -10,7 +10,6 @@ All notable changes to this plugin will be documented in this file.
 - `review-app` orchestration command with parallel/sequential modes and targeted aspect selection
 - `playstore-requirements` skill with comprehensive reference files
 - Reference files covering: common rejection reasons, Android permissions guide, Data Safety Section requirements, React Native/Expo gotchas
-- MCP server for Google Play Developer API (not auto-enabled, requires setup)
 - Based on Google Play Store policies as of February 2026
 - Covers August 2024 target SDK 34 requirement
 - Covers December 2023 account deletion requirement

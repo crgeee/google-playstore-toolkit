@@ -90,7 +90,15 @@ The highest bump wins. If you have both `fix:` and `feat:` commits, it's a MINOR
 
 1. Create a branch from `main`
 2. Make changes using conventional commit messages
-3. Open a PR — CI validates structure, agents, and commit messages
+3. Open a PR — CI runs these required status checks:
+   - Validate Plugin Structure
+   - Validate Agents
+   - Validate Commands
+   - Validate Skills
+   - Validate References
+   - Check Version Consistency
+   - Lint Commit Messages
+   - Lint Markdown
 4. Get approval from `@crgeee` (CODEOWNERS)
 5. Merge — release happens automatically if `feat:` or `fix:` commits are present
 

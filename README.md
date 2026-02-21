@@ -201,10 +201,6 @@ This plugin covers Google Play Store policies as of **February 2026**, including
 
 Google updates their policies on a rolling basis. See [CHANGELOG.md](CHANGELOG.md) for update history.
 
-## MCP Server (Not Yet Enabled)
-
-The `mcp-server/` directory contains a TypeScript MCP server for the Google Play Developer API (read-only) that can query release tracks, reviews, and app details. It requires a Google Cloud service account, so it is **not auto-enabled** with the plugin. A setup command will be added in a future release.
-
 ## Contributing
 
 Contributions are welcome! If you find a missing check, a false positive, or want to add coverage for a new policy:
